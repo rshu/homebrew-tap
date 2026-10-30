@@ -133,10 +133,6 @@ def resource(name: str, file: dict, indent: int = 2) -> str:
             f'{space}  url "{file["url"]}", using: :nounzip\n'
             f'{space}  sha256 "{file["digests"]["sha256"]}"\n'
             f'{space}end\n')
-    if name == "pyyaml":
-        result = (f"{space}# Upstream wheels bundle libyaml; no external libyaml is linked.\n"
-                  f"{space}# rubocop:disable FormulaAudit/ResourceRequiresDependencies\n" + result
-                  + f"{space}# rubocop:enable FormulaAudit/ResourceRequiresDependencies\n")
     return result
 
 
@@ -181,6 +177,7 @@ class Trajviz < Formula
   sha256 "{main_wheel['digests']['sha256']}"
   license "MIT"
 
+  depends_on "libyaml"
   depends_on "python@3.14"
 
 '''

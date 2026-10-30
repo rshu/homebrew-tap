@@ -10,6 +10,7 @@ class Trajviz < Formula
   sha256 "60681f3dc7c5628916c99f222c856b36762b6218fffd70cb62c6509030525519"
   license "MIT"
 
+  depends_on "libyaml"
   depends_on "python@3.14"
 
   on_macos do
@@ -64,13 +65,10 @@ class Trajviz < Formula
         sha256 "23ace664830ee0bfe014a0c7bc248b1f7f25ed7ad103852c317624a1083af462"
       end
 
-      # Upstream wheels bundle libyaml; no external libyaml is linked.
-      # rubocop:disable FormulaAudit/ResourceRequiresDependencies
       resource "pyyaml" do
         url "https://files.pythonhosted.org/packages/bd/9c/4d95bb87eb2063d20db7b60faa3840c1b18025517ae857371c4dd55a6b3a/pyyaml-6.0.3-cp314-cp314-macosx_11_0_arm64.whl", using: :nounzip
         sha256 "34d5fcd24b8445fadc33f9cf348c1047101756fd760b4dacb5c3e99755703310"
       end
-      # rubocop:enable FormulaAudit/ResourceRequiresDependencies
     end
 
     on_intel do
@@ -124,13 +122,10 @@ class Trajviz < Formula
         sha256 "428e04521a40150c85216fc8b85e8d39fece235a9cf5e383761238c7fa9b96fb"
       end
 
-      # Upstream wheels bundle libyaml; no external libyaml is linked.
-      # rubocop:disable FormulaAudit/ResourceRequiresDependencies
       resource "pyyaml" do
         url "https://files.pythonhosted.org/packages/9d/8c/f4bd7f6465179953d3ac9bc44ac1a8a3e6122cf8ada906b4f96c60172d43/pyyaml-6.0.3-cp314-cp314-macosx_10_13_x86_64.whl", using: :nounzip
         sha256 "8d1fab6bb153a416f9aeb4b8763bc0f22a5586065f86f7664fc23339fc1c1fac"
       end
-      # rubocop:enable FormulaAudit/ResourceRequiresDependencies
     end
   end
 
@@ -186,13 +181,10 @@ class Trajviz < Formula
         sha256 "ce5c1d2a8b27468f433ca974829c44060b8097eedc39933e3c206a90ee49c4a9"
       end
 
-      # Upstream wheels bundle libyaml; no external libyaml is linked.
-      # rubocop:disable FormulaAudit/ResourceRequiresDependencies
       resource "pyyaml" do
         url "https://files.pythonhosted.org/packages/92/b5/47e807c2623074914e29dabd16cbbdd4bf5e9b2db9f8090fa64411fc5382/pyyaml-6.0.3-cp314-cp314-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", using: :nounzip
         sha256 "501a031947e3a9025ed4405a168e6ef5ae3126c59f90ce0cd6f2bfc477be31b7"
       end
-      # rubocop:enable FormulaAudit/ResourceRequiresDependencies
     end
 
     on_intel do
@@ -246,13 +238,10 @@ class Trajviz < Formula
         sha256 "7a5f930472650a82629163023e630d160863fce524c616f4e5186e5de9d9a49b"
       end
 
-      # Upstream wheels bundle libyaml; no external libyaml is linked.
-      # rubocop:disable FormulaAudit/ResourceRequiresDependencies
       resource "pyyaml" do
         url "https://files.pythonhosted.org/packages/88/f9/16491d7ed2a919954993e48aa941b200f38040928474c9e85ea9e64222c3/pyyaml-6.0.3-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", using: :nounzip
         sha256 "c458b6d084f9b935061bc36216e8a69a7e293a2f1e68bf956dcd9e6cbcd143f5"
       end
-      # rubocop:enable FormulaAudit/ResourceRequiresDependencies
     end
   end
 
