@@ -10,7 +10,6 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
   actions: write
 
 jobs:
@@ -25,7 +24,7 @@ jobs:
         env:
           RELEASE_VERSION: ${{ inputs.version }}
         run: uv run --with packaging==26.2 python .github/scripts/update_formula.py --version "$RELEASE_VERSION"
-      - name: Open update pull request
+      - name: Prepare and test release branch
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_VERSION: ${{ inputs.version }}
@@ -35,20 +34,15 @@ jobs:
             exit 0
           fi
           branch="codex/trajviz-$RELEASE_VERSION"
-          printf 'Package the published PyPI release %s with pinned, checksummed wheel resources.\n\nValidation: Test formula workflow on this branch.\n' "$RELEASE_VERSION" > "$RUNNER_TEMP/update-body.md"
           if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
             echo "An update branch already exists: $branch"
-            if ! gh pr view "$branch" --json number >/dev/null 2>&1; then
-              gh pr create --base main --head "$branch" --title "trajviz $RELEASE_VERSION" --body-file "$RUNNER_TEMP/update-body.md"
-            fi
-            gh workflow run test.yml --ref "$branch"
-            exit 0
+          else
+            git switch -c "$branch"
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add Formula/trajviz.rb
+            git commit -m "trajviz $RELEASE_VERSION"
+            git push origin "$branch"
           fi
-          git switch -c "$branch"
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add Formula/trajviz.rb
-          git commit -m "trajviz $RELEASE_VERSION"
-          git push origin "$branch"
-          gh pr create --base main --head "$branch" --title "trajviz $RELEASE_VERSION" --body-file "$RUNNER_TEMP/update-body.md"
           gh workflow run test.yml --ref "$branch"
+          printf 'Prepared release branch: %s/tree/%s\n\nReview the branch and passing Test formula run, then merge it into main.\n' "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" "$branch" >> "$GITHUB_STEP_SUMMARY"

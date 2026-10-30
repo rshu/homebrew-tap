@@ -27,8 +27,9 @@ on Apple Silicon/ARM64 and Intel/x86-64 are checked in CI.
 ## Maintaining the package
 
 After publishing a stable PyPI release, run the **Update formula** workflow with
-the same version. It regenerates the dependency resources and opens a pull
-request. Run the formula tests on that branch before merging.
+the same version. It regenerates the dependency resources, prepares an update
+branch and starts the formula tests. Review the branch and passing CI results,
+then merge it into `main`. The workflow summary links to the prepared branch.
 
 To prepare an update locally, install [`uv`](https://docs.astral.sh/uv/), then run:
 
