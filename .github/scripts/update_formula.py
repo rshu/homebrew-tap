@@ -1,7 +1,7 @@
 """Resolve a published TrajViz release into checksummed Homebrew wheel resources.
 
 Run with uv's packaging dependency, e.g.:
-uv run --with packaging python .github/scripts/update_formula.py --version 0.3.1
+uv run --with packaging==26.2 python .github/scripts/update_formula.py --version 0.3.1
 """
 
 from __future__ import annotations
@@ -19,6 +19,7 @@ import time
 import urllib.error
 import urllib.request
 from pathlib import Path
+from urllib.parse import unquote, urlparse
 
 import tomllib
 from packaging.markers import Marker, default_environment
@@ -108,12 +109,12 @@ def resolve(version: str, key: str, constraints: str) -> dict[str, str]:
                "--python-platform", PLATFORMS[key][0], "--only-binary", ":all:",
                "--default-index", "https://pypi.org/simple", "--no-header", "--no-annotate",
                "--prerelease", "disallow"]
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt") as constraint_file:
+    with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".txt") as constraint_file:
         constraint_file.write(constraints)
         constraint_file.flush()
         command.extend(["--constraints", constraint_file.name])
         result = subprocess.run(command, input=f"agent-trajviz[app]=={version}\n", text=True,
-                                capture_output=True, check=False)
+                                encoding="utf-8", capture_output=True, check=False)
     if result.returncode:
         raise RuntimeError(f"Dependency resolution failed on {key}: {result.stderr}")
     packages = {}
@@ -136,9 +137,40 @@ def resource(name: str, file: dict, indent: int = 2) -> str:
     return result
 
 
+def nonnegative_revision(value: str) -> int:
+    try:
+        revision = int(value)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError("revision must be a nonnegative integer") from error
+    if revision < 0:
+        raise argparse.ArgumentTypeError("revision must be a nonnegative integer")
+    return revision
+
+
+def select_revision(existing: str, version: str, requested: int | None = None) -> int:
+    """Preserve same-release rebuilds and reset revisions for a new release."""
+    if requested is not None:
+        if requested < 0:
+            raise ValueError("revision must be a nonnegative integer")
+        return requested
+    if not existing:
+        return 0
+    url = re.search(r'^  url "([^"]+)"', existing, re.MULTILINE)
+    if url is None:
+        raise ValueError("existing formula has no root wheel URL; supply --revision explicitly")
+    filename = unquote(Path(urlparse(url[1]).path).name)
+    existing_version = str(parse_wheel_filename(filename)[1])
+    if existing_version != version:
+        return 0
+    revision = re.search(r"^  revision (\d+)\s*$", existing, re.MULTILINE)
+    return int(revision[1]) if revision else 0
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--version", help="Published PyPI version; defaults to latest")
+    parser.add_argument("--revision", type=nonnegative_revision,
+                        help="Homebrew revision; preserves same-version revisions and resets new versions by default")
     args = parser.parse_args()
     if args.version and not re.fullmatch(r"\d+\.\d+\.\d+", args.version):
         raise SystemExit("Only stable semantic releases are supported")
@@ -146,7 +178,11 @@ def main() -> None:
     version = metadata["info"]["version"]
     if not re.fullmatch(r"\d+\.\d+\.\d+", version):
         raise SystemExit("Only stable semantic releases are supported")
-    lock = tomllib.loads(download(f"https://raw.githubusercontent.com/rshu/TrajViz/v{version}/uv.lock").decode())
+    formula = ROOT / "Formula" / "trajviz.rb"
+    existing = formula.read_text(encoding="utf-8") if formula.exists() else ""
+    revision = select_revision(existing, version, args.revision)
+    revision_line = f"  revision {revision}\n" if revision else ""
+    lock = tomllib.loads(download(f"https://raw.githubusercontent.com/rshu/TrajViz/v{version}/uv.lock").decode("utf-8"))
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
         resolved = dict(zip(PLATFORMS, pool.map(
             lambda key: resolve(version, key, constraints_for(lock, key)), PLATFORMS)))
@@ -175,7 +211,7 @@ class Trajviz < Formula
   url "{main_wheel['url']}", using: :nounzip
   sha256 "{main_wheel['digests']['sha256']}"
   license "MIT"
-
+{revision_line}
   depends_on "libyaml"
   depends_on "python@3.14"
 
@@ -198,12 +234,11 @@ class Trajviz < Formula
                   "  preserve_rpath\n\n")
     for name, file in sorted(shared.items()):
         chunks.append(resource(name, file) + "\n")
-    template = (ROOT / ".github" / "scripts" / "formula_methods.rb").read_text()
+    template = (ROOT / ".github" / "scripts" / "formula_methods.rb").read_text(encoding="utf-8")
     chunks.append(template)
-    formula = ROOT / "Formula" / "trajviz.rb"
     content = "".join(chunks)
     # Atomic replacement keeps a failed update from truncating a working formula.
-    with tempfile.NamedTemporaryFile(mode="w", dir=formula.parent, delete=False) as output:
+    with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=formula.parent, delete=False) as output:
         output.write(content)
         temporary = Path(output.name)
     temporary.chmod(0o644)

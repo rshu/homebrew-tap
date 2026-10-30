@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import importlib.util
 import subprocess
 import unittest
@@ -167,13 +168,64 @@ class ReleaseConstraintTests(OfflineTestCase):
                     self.assertEqual(command[command.index("--python-version") + 1], "3.14")
                     self.assertEqual(command[command.index("--only-binary") + 1], ":all:")
                     self.assertEqual(kwargs["input"], "agent-trajviz[app]==0.3.1\n")
-                    self.assertEqual(Path(command[command.index("--constraints") + 1]).read_text(), constraints)
+                    self.assertEqual(Path(command[command.index("--constraints") + 1]).read_text(encoding="utf-8"), constraints)
                     return subprocess.CompletedProcess(command, 0, "agent_trajviz==0.3.1\nnumpy==2.5.1\n", "")
 
                 with patch.object(formula.subprocess, "run", side_effect=compile_offline) as compile_run:
                     self.assertEqual(formula.resolve("0.3.1", key, constraints),
                                      {"agent-trajviz": "0.3.1", "numpy": "2.5.1"})
                 compile_run.assert_called_once()
+
+
+class FormulaRevisionTests(OfflineTestCase):
+    @staticmethod
+    def existing(version: str = "0.3.1", revision: int | None = None) -> str:
+        text = ('class Trajviz < Formula\n'
+                f'  url "https://example.invalid/agent_trajviz-{version}-py3-none-any.whl", using: :nounzip\n'
+                '  license "MIT"\n')
+        if revision is not None:
+            text += f"  revision {revision}\n"
+        return text + "end\n"
+
+    def test_same_version_preserves_homebrew_revision(self) -> None:
+        self.assertEqual(formula.select_revision(self.existing(revision=3), "0.3.1"), 3)
+
+    def test_same_version_without_revision_keeps_initial_release(self) -> None:
+        self.assertEqual(formula.select_revision(self.existing(), "0.3.1"), 0)
+
+    def test_new_release_resets_homebrew_revision(self) -> None:
+        self.assertEqual(formula.select_revision(self.existing(revision=3), "0.3.2"), 0)
+
+    def test_first_formula_defaults_to_initial_release(self) -> None:
+        self.assertEqual(formula.select_revision("", "0.3.1"), 0)
+
+    def test_explicit_revision_overrides_same_or_new_release(self) -> None:
+        for version in ("0.3.1", "0.3.2"):
+            for requested in (0, 1, 4):
+                with self.subTest(version=version, requested=requested):
+                    self.assertEqual(formula.select_revision(self.existing(revision=3), version, requested), requested)
+
+    def test_invalid_revision_is_rejected_before_generation(self) -> None:
+        for value in ("-1", "1.5", "invalid"):
+            with self.subTest(value=value), self.assertRaises(argparse.ArgumentTypeError):
+                formula.nonnegative_revision(value)
+        with self.assertRaises(ValueError):
+            formula.select_revision(self.existing(), "0.3.1", -1)
+        self.assertEqual(formula.nonnegative_revision("0"), 0)
+        self.assertEqual(formula.nonnegative_revision("2"), 2)
+
+    def test_revision_uses_root_wheel_version_instead_of_resource_version(self) -> None:
+        existing = self.existing(revision=2).replace(
+            "end\n", '  resource "dependency" do\n'
+            '    url "https://example.invalid/dependency-0.3.2-py3-none-any.whl"\n'
+            '  end\nend\n')
+        self.assertEqual(formula.select_revision(existing, "0.3.1"), 2)
+        self.assertEqual(formula.select_revision(existing, "0.3.2"), 0)
+
+    def test_existing_formula_with_missing_root_url_requires_explicit_revision(self) -> None:
+        with self.assertRaisesRegex(ValueError, "no root wheel URL"):
+            formula.select_revision("class Trajviz < Formula\nend\n", "0.3.1")
+        self.assertEqual(formula.select_revision("class Trajviz < Formula\nend\n", "0.3.1", 1), 1)
 
 
 if __name__ == "__main__":

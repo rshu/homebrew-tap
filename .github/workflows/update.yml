@@ -36,6 +36,16 @@ jobs:
           branch="codex/trajviz-$RELEASE_VERSION"
           if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
             echo "An update branch already exists: $branch"
+            git fetch --no-tags origin "refs/heads/$branch"
+            branch_formula="$RUNNER_TEMP/existing-trajviz.rb"
+            if ! git show FETCH_HEAD:Formula/trajviz.rb > "$branch_formula"; then
+              echo "::error::Existing release branch $branch has no formula. Review or remove it before retrying."
+              exit 1
+            fi
+            if ! cmp -s Formula/trajviz.rb "$branch_formula"; then
+              echo "::error::Existing release branch $branch differs from the freshly generated formula. Review or remove it before retrying."
+              exit 1
+            fi
           else
             git switch -c "$branch"
             git config user.name 'github-actions[bot]'
