@@ -10,9 +10,6 @@ class Trajviz < Formula
   sha256 "60681f3dc7c5628916c99f222c856b36762b6218fffd70cb62c6509030525519"
   license "MIT"
 
-  # Preserve the relocatable library IDs supplied by upstream Python wheels.
-  preserve_rpath
-
   depends_on "libyaml"
   depends_on "python@3.14"
 
@@ -247,6 +244,9 @@ class Trajviz < Formula
       end
     end
   end
+
+  # Preserve the relocatable library IDs supplied by upstream Python wheels.
+  preserve_rpath
 
   resource "annotated-doc" do
     url "https://files.pythonhosted.org/packages/1e/d3/26bf1008eb3d2daa8ef4cacc7f3bfdc11818d111f7e2d0201bc6e3b49d45/annotated_doc-0.0.4-py3-none-any.whl", using: :nounzip

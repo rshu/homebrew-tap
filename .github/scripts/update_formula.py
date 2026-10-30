@@ -177,9 +177,6 @@ class Trajviz < Formula
   sha256 "{main_wheel['digests']['sha256']}"
   license "MIT"
 
-  # Preserve the relocatable library IDs supplied by upstream Python wheels.
-  preserve_rpath
-
   depends_on "libyaml"
   depends_on "python@3.14"
 
@@ -198,6 +195,8 @@ class Trajviz < Formula
             chunks.append("    end\n\n")
         chunks[-1] = chunks[-1].rstrip() + "\n"
         chunks.append("  end\n\n")
+    chunks.append("  # Preserve the relocatable library IDs supplied by upstream Python wheels.\n"
+                  "  preserve_rpath\n\n")
     for name, file in sorted(shared.items()):
         chunks.append(resource(name, file) + "\n")
     template = (ROOT / ".github" / "scripts" / "formula_methods.rb").read_text()
