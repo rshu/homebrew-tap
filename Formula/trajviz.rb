@@ -10,6 +10,9 @@ class Trajviz < Formula
   sha256 "60681f3dc7c5628916c99f222c856b36762b6218fffd70cb62c6509030525519"
   license "MIT"
 
+  # Preserve the relocatable library IDs supplied by upstream Python wheels.
+  preserve_rpath
+
   depends_on "libyaml"
   depends_on "python@3.14"
 
