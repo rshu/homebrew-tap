@@ -34,9 +34,13 @@ jobs:
             echo "Formula is already current."
             exit 0
           fi
-          branch="update/trajviz-$RELEASE_VERSION"
+          branch="codex/trajviz-$RELEASE_VERSION"
+          printf 'Package the published PyPI release %s with pinned, checksummed wheel resources.\n\nValidation: Test formula workflow on this branch.\n' "$RELEASE_VERSION" > "$RUNNER_TEMP/update-body.md"
           if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
             echo "An update branch already exists: $branch"
+            if ! gh pr view "$branch" --json number >/dev/null 2>&1; then
+              gh pr create --base main --head "$branch" --title "trajviz $RELEASE_VERSION" --body-file "$RUNNER_TEMP/update-body.md"
+            fi
             gh workflow run test.yml --ref "$branch"
             exit 0
           fi
@@ -46,6 +50,5 @@ jobs:
           git add Formula/trajviz.rb
           git commit -m "trajviz $RELEASE_VERSION"
           git push origin "$branch"
-          printf 'Package the published PyPI release %s with pinned, checksummed wheel resources.\n\nValidation: Test formula workflow on this branch.\n' "$RELEASE_VERSION" > "$RUNNER_TEMP/update-body.md"
           gh pr create --base main --head "$branch" --title "trajviz $RELEASE_VERSION" --body-file "$RUNNER_TEMP/update-body.md"
           gh workflow run test.yml --ref "$branch"
