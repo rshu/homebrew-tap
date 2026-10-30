@@ -6,7 +6,6 @@ class Trajviz < Formula
   desc "Analyze and visualize coding-agent trajectories"
   homepage "https://github.com/rshu/TrajViz"
   url "https://files.pythonhosted.org/packages/cc/e2/eac965a8d51c941e9852a746b60b45c4a72d5f179eb241ce7acf97292789/agent_trajviz-0.3.1-py3-none-any.whl", using: :nounzip
-  version "0.3.1"
   sha256 "60681f3dc7c5628916c99f222c856b36762b6218fffd70cb62c6509030525519"
   license "MIT"
 

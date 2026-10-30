@@ -173,7 +173,6 @@ class Trajviz < Formula
   desc "Analyze and visualize coding-agent trajectories"
   homepage "https://github.com/rshu/TrajViz"
   url "{main_wheel['url']}", using: :nounzip
-  version "{version}"
   sha256 "{main_wheel['digests']['sha256']}"
   license "MIT"
 
