@@ -1,0 +1,51 @@
+name: Update formula
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Published stable PyPI version (for example 0.3.1)
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          version: "0.11.28"
+      - name: Generate checksummed wheel resources
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: uv run --with packaging==26.2 python .github/scripts/update_formula.py --version "$RELEASE_VERSION"
+      - name: Open update pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          if git diff --quiet -- Formula/trajviz.rb; then
+            echo "Formula is already current."
+            exit 0
+          fi
+          branch="update/trajviz-$RELEASE_VERSION"
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
+            echo "An update branch already exists: $branch"
+            gh workflow run test.yml --ref "$branch"
+            exit 0
+          fi
+          git switch -c "$branch"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add Formula/trajviz.rb
+          git commit -m "trajviz $RELEASE_VERSION"
+          git push origin "$branch"
+          printf 'Package the published PyPI release %s with pinned, checksummed wheel resources.\n\nValidation: Test formula workflow on this branch.\n' "$RELEASE_VERSION" > "$RUNNER_TEMP/update-body.md"
+          gh pr create --base main --head "$branch" --title "trajviz $RELEASE_VERSION" --body-file "$RUNNER_TEMP/update-body.md"
+          gh workflow run test.yml --ref "$branch"
