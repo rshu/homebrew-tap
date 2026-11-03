@@ -17,6 +17,17 @@ agent-trajviz-converge-app --data-root /path/to/trajectories
 
 It opens on port 7861. `agent-trajviz-converge` provides headless comparisons.
 
+Inspect saved AWE analyses and export an offline report without an API key:
+
+```sh
+agent-trajviz-awe inspect /path/to/saved-run.zip
+agent-trajviz-awe export /path/to/saved-run.zip --output report.html
+```
+
+The dashboard's **AWE** tab includes workflow evaluation, evidence and graph navigation.
+Evaluation operations and optional model connections have their own session settings; see the
+[AWE guide](https://github.com/rshu/TrajViz/blob/main/docs/awe.md).
+
 ```sh
 brew update
 brew upgrade rshu/tap/trajviz

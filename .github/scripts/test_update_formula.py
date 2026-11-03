@@ -3,8 +3,15 @@
 from __future__ import annotations
 
 import argparse
+import ast
+import contextlib
 import importlib.util
+import io
+import re
 import subprocess
+import sys
+import tempfile
+import textwrap
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -226,6 +233,46 @@ class FormulaRevisionTests(OfflineTestCase):
         with self.assertRaisesRegex(ValueError, "no root wheel URL"):
             formula.select_revision("class Trajviz < Formula\nend\n", "0.3.1")
         self.assertEqual(formula.select_revision("class Trajviz < Formula\nend\n", "0.3.1", 1), 1)
+
+
+class FormulaSmokeTests(OfflineTestCase):
+    def test_release_generation_keeps_all_public_commands_and_saved_awe_checks(self) -> None:
+        source_template = (SCRIPT.parent / "formula_methods.rb").read_text(encoding="utf-8")
+        file = wheel("agent_trajviz-9.8.7-py3-none-any.whl", digests={"sha256": "a" * 64})
+        release = {"info": {"name": "agent-trajviz", "version": "9.8.7"}, "urls": [file]}
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "Formula").mkdir()
+            scripts = root / ".github" / "scripts"
+            scripts.mkdir(parents=True)
+            (scripts / "formula_methods.rb").write_text(source_template, encoding="utf-8")
+            with patch.object(formula, "ROOT", root), patch.object(formula, "pypi", return_value=release), \
+                    patch.object(formula, "download", return_value=b"package = []\n"), \
+                    patch.object(formula, "resolve", return_value={"agent-trajviz": "9.8.7"}), \
+                    patch.object(sys, "argv", [str(SCRIPT), "--version", "9.8.7"]), \
+                    contextlib.redirect_stdout(io.StringIO()):
+                formula.main()
+            generated = (root / "Formula" / "trajviz.rb").read_text(encoding="utf-8")
+        commands = re.search(r"%w\[(.*?)\]\.each", generated, re.DOTALL)
+        self.assertIsNotNone(commands)
+        self.assertEqual(set(commands[1].split()), {
+            "agent-trajviz", "agent-trajviz-converge", "agent-trajviz-collect", "agent-trajviz-label",
+            "agent-trajviz-awe", "agent-trajviz-converge-app",
+        })
+        self.assertIn('"inspect", testpath/"awe-faults.json"', generated)
+        self.assertIn('"--output", testpath/"awe-artifacts.zip"', generated)
+        self.assertIn('"--output", testpath/"awe-report.html"', generated)
+        self.assertIn('archive.read("faults.json") == Path("awe-faults.json").read_bytes()', generated)
+        self.assertIn('assert "<script>synthetic-source</script>" not in awe_html', generated)
+
+    def test_embedded_installed_smoke_is_valid_python(self) -> None:
+        template = (SCRIPT.parent / "formula_methods.rb").read_text(encoding="utf-8")
+        script = re.search(r"<<~PYTHON\n(.*?)^    PYTHON$", template, re.DOTALL | re.MULTILINE)
+        self.assertIsNotNone(script)
+        # Ruby fills the installed paths and independently allocated free ports
+        # when brew test executes this script on each supported platform.
+        code = textwrap.dedent(script[1]).replace("#{free_port}", "8765").replace("#{bin}", "/tmp/bin")
+        ast.parse(code)
 
 
 if __name__ == "__main__":

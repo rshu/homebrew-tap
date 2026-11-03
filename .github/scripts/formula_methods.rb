@@ -24,13 +24,16 @@
       Start the comparison dashboard with:
         agent-trajviz-converge-app --data-root /path/to/trajectories
 
+      Inspect saved AWE analyses without an API key:
+        agent-trajviz-awe inspect /path/to/saved-run.zip
+
       This tap installs the full dashboard in an isolated Python environment.
       Model connections and API keys are configured in the dashboard's Settings.
     EOS
   end
 
   test do
-    %w[agent-trajviz agent-trajviz-converge agent-trajviz-collect agent-trajviz-label
+    %w[agent-trajviz agent-trajviz-converge agent-trajviz-collect agent-trajviz-label agent-trajviz-awe
        agent-trajviz-converge-app].each do |command|
       assert_match version.to_s, shell_output("#{bin}/#{command} --version")
       assert_match "usage:", shell_output("#{bin}/#{command} --help")
@@ -46,6 +49,13 @@
     assert_path_exists testpath/"export/trajectory.json"
     assert_match "<html", (testpath/"report.html").read
 
+    (testpath/"awe-faults.json").write <<~JSON
+      [{"case_id":"brew__task","agent":"brew","instance_id":"task","blame_status":"unattributed","faults":[],"task":{"problem_statement":"<script>synthetic-source</script>"},"future_metadata":{"preserved":true}}]
+    JSON
+    system bin/"agent-trajviz-awe", "inspect", testpath/"awe-faults.json", "--output", testpath/"awe-run.json"
+    system bin/"agent-trajviz-awe", "export", testpath/"awe-run.json", "--output", testpath/"awe-artifacts.zip"
+    system bin/"agent-trajviz-awe", "export", testpath/"awe-run.json", "--output", testpath/"awe-report.html"
+
     (testpath/"smoke.py").write <<~PYTHON
       import json
       import os
@@ -54,10 +64,22 @@
       import time
       import urllib.error
       import urllib.request
+      import zipfile
 
       os.environ["GRADIO_ANALYTICS_ENABLED"] = "False"
       import agent_trajviz as tv
       from agent_trajviz.dashboard import insight_app, converge_app
+      from agent_trajviz import awe
+
+      saved = awe.load_run("awe-run.json")
+      assert saved.cases[0]["future_metadata"] == {"preserved": True}
+      assert saved.cases[0]["blame_status"] == "unattributed" and saved.cases[0]["faults"] == []
+      with zipfile.ZipFile("awe-artifacts.zip") as archive:
+          assert archive.read("faults.json") == Path("awe-faults.json").read_bytes()
+      assert awe.load_run("awe-artifacts.zip").raw_artifacts == saved.raw_artifacts
+      awe_html = Path("awe-report.html").read_text(encoding="utf-8")
+      assert "&lt;script&gt;synthetic-source&lt;/script&gt;" in awe_html
+      assert "<script>synthetic-source</script>" not in awe_html
 
       run = tv.load("export/trajectory.json")
       assert run.metrics["tokens"]["total"] == 15, run.metrics["tokens"]
