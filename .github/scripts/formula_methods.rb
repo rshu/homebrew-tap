@@ -28,7 +28,8 @@
         agent-trajviz-awe inspect /path/to/saved-run.zip
 
       This tap installs the full dashboard in an isolated Python environment.
-      Model connections and API keys are configured in the dashboard's Settings.
+      Configure optional models in AI Trajectory Analysis > Settings.
+      Inspect a loaded session in AWE > Trajectory; reference attribution is optional.
     EOS
   end
 
@@ -85,8 +86,22 @@
       assert run.metrics["tokens"]["total"] == 15, run.metrics["tokens"]
       assert run.view("tool_usage").data["tools"][0]["calls"] == 1
       assert all(json.loads(view.to_json()) for view in run.views().values())
+      inspection = awe.inspect_trajectory(run)
+      assert inspection["available"] and inspection["mode"] == "trajectory_only"
+      assert inspection["summary"]["steps"] == len(run.steps)
+      assert inspection["summary"]["tool_calls"] == 1
+      assert inspection["summary"]["failed_calls"] == 0
+      assert inspection["outcome"]["status"] == "unknown"
+      json.dumps(inspection, allow_nan=False)
       for factory in (insight_app, converge_app):
           app = factory()
+          if factory is insight_app:
+              tabs = [block for block in app.blocks.values()
+                      if getattr(block, "elem_id", None) == "awe-workspace-tabs"]
+              assert len(tabs) == 1 and tabs[0].selected == "inspection"
+              references = [block for block in app.blocks.values()
+                            if getattr(block, "elem_id", None) == "awe-reference-attribution"]
+              assert len(references) == 1 and references[0].open is False
           try:
               _, url, _ = app.launch(server_name="127.0.0.1", server_port=#{free_port},
                                      prevent_thread_lock=True, quiet=True, inbrowser=False)

@@ -7,7 +7,8 @@ brew install rshu/tap/trajviz
 agent-trajviz
 ```
 
-Open <http://127.0.0.1:7860>. Configure optional model connections in **Settings**.
+Open <http://127.0.0.1:7860>. Configure optional model connections in
+**AI Trajectory Analysis → Settings**.
 
 For the Converge comparison dashboard, run:
 
@@ -24,8 +25,10 @@ agent-trajviz-awe inspect /path/to/saved-run.zip
 agent-trajviz-awe export /path/to/saved-run.zip --output report.html
 ```
 
-The dashboard's **AWE** tab includes workflow evaluation, evidence and graph navigation.
-Evaluation operations and optional model connections have their own session settings; see the
+The dashboard's **AWE → Trajectory** view inspects the loaded session directly;
+reference-based attribution is optional. **Saved runs & evaluation** provides
+recorded evidence, graphs and reports. Evaluation operations and optional model
+connections have their own session settings; see the
 [AWE guide](https://github.com/rshu/TrajViz/blob/main/docs/awe.md).
 
 ```sh
