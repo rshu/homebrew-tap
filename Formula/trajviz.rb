@@ -10,7 +10,7 @@ class Trajviz < Formula
   license "MIT"
 
   bottle do
-    root_url "https://github.com/rshu/homebrew-tap/releases/download/trajviz-0.5.1"
+    root_url "https://github.com/rshu/homebrew-trajviz/releases/download/trajviz-0.5.1"
     sha256 cellar: :any, arm64_tahoe:   "5d5ffc659acf0357999fc0e8ff5a485097063c16da179b81cbed5da7bfc449f9"
     sha256 cellar: :any, arm64_sequoia: "1911274f2dba3f803162dcf6496d3622d1c905bda0b224e6dd5ade9d6918955c"
     sha256 cellar: :any, tahoe:         "6b569fcdd8a69a91051b30c215971551a2e71ee5a2ce98b54360e5fe9a4bd02c"

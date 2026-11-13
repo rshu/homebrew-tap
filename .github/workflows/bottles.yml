@@ -25,7 +25,7 @@ jobs:
       HOMEBREW_NO_ANALYTICS: "1"
       HOMEBREW_NO_ASK: "1"
       GRADIO_ANALYTICS_ENABLED: "False"
-      FORMULA: rshu/tap/trajviz
+      FORMULA: rshu/trajviz/trajviz
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -35,7 +35,7 @@ jobs:
         run: echo /home/linuxbrew/.linuxbrew/bin >> "$GITHUB_PATH"
       - name: Register local tap
         run: |
-          brew tap --custom-remote rshu/tap "$GITHUB_WORKSPACE"
+          brew tap --custom-remote rshu/trajviz "$GITHUB_WORKSPACE"
           if brew help trust >/dev/null 2>&1; then
             brew trust --formula "$FORMULA"
           fi
@@ -59,7 +59,7 @@ jobs:
           cd "$RUNNER_TEMP/trajviz-bottles"
           metadata=(trajviz--*.bottle.json)
           test "${#metadata[@]}" -eq 1
-          python3 - "${metadata[0]}" "$(brew --repository rshu/tap)/Formula/trajviz.rb" <<'PYTHON'
+          python3 - "${metadata[0]}" "$(brew --repository rshu/trajviz)/Formula/trajviz.rb" <<'PYTHON'
           import json
           import os
           import re

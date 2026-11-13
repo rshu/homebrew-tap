@@ -41,15 +41,15 @@ jobs:
         run: echo /home/linuxbrew/.linuxbrew/bin >> "$GITHUB_PATH"
       - name: Register local tap
         run: |
-          brew tap --custom-remote rshu/tap "$GITHUB_WORKSPACE"
+          brew tap --custom-remote rshu/trajviz "$GITHUB_WORKSPACE"
           if brew help trust >/dev/null 2>&1; then
-            brew trust --formula rshu/tap/trajviz
+            brew trust --formula rshu/trajviz/trajviz
           fi
       - name: Style
         run: brew style Formula/trajviz.rb
       - name: Install
         run: brew install --build-from-source trajviz
       - name: Functional tests
-        run: brew test rshu/tap/trajviz
+        run: brew test trajviz
       - name: Audit
-        run: brew audit --strict --online rshu/tap/trajviz
+        run: brew audit --strict --online trajviz

@@ -1,53 +1,31 @@
 # TrajViz for Homebrew
 
-Install the full TrajViz dashboard and command-line tools. The first two
-commands are one-time setup. The trust step applies to Homebrew 6 and later.
+[TrajViz](https://github.com/rshu/TrajViz) analyzes coding-agent trajectories.
+This tap installs its dashboards, CLI, and Python runtime. Tap once and trust
+the formula on Homebrew 6 or later.
 
 ```sh
-brew tap rshu/tap
-brew trust --formula rshu/tap/trajviz
+brew tap rshu/trajviz
+brew trust --formula rshu/trajviz/trajviz
 brew install trajviz
 agent-trajviz
 ```
 
-Open <http://127.0.0.1:7860>. Configure optional model connections in
-**AI Trajectory Analysis → Settings**.
+Open the local URL printed by `agent-trajviz`. See the [TrajViz documentation](https://rshu.github.io/TrajViz/)
+for loading sessions, comparing runs, and configuring AI analysis.
 
-For the Converge comparison dashboard, run:
-
-```sh
-agent-trajviz-converge-app --data-root /path/to/trajectories
-```
-
-It opens on port 7861. `agent-trajviz-converge` provides headless comparisons.
-
-Inspect saved AWE analyses and export an offline report without an API key:
-
-```sh
-agent-trajviz-awe inspect /path/to/saved-run.zip
-agent-trajviz-awe export /path/to/saved-run.zip --output report.html
-```
-
-The dashboard's **AWE → Trajectory** view inspects the loaded session directly;
-reference-based attribution is optional. **Saved runs & evaluation** provides
-recorded evidence, graphs and reports. Evaluation operations and optional model
-connections have their own session settings; see the
-[AWE guide](https://github.com/rshu/TrajViz/blob/main/docs/awe.md).
+## Upgrade
 
 ```sh
 brew update
 brew upgrade trajviz
 ```
 
-The package tracks stable [`agent-trajviz` releases on PyPI](https://pypi.org/project/agent-trajviz/).
-For Python projects that import the library, continue using `pip install agent-trajviz`.
+Homebrew uses a prebuilt bottle when available and installs pinned wheels in an
+isolated Python environment on other systems. To import the library in your own
+Python project, install [`agent-trajviz` from PyPI](https://pypi.org/project/agent-trajviz/).
 
-Homebrew installs a prebuilt bottle when one matches your platform. Otherwise,
-the formula installs the release's pinned, SHA-256-verified PyPI wheels into
-its isolated Python 3.14 environment. The formula includes dashboards, charts,
-reports, model features and native compressed-session support.
-
-## Maintaining the package
+## Maintaining the formula
 
 After publishing a stable PyPI release, run the **Update formula** workflow with
 the same version. It regenerates the dependency resources, prepares an update
@@ -63,7 +41,7 @@ and merge the update into `main`.
 To prepare an update locally, install [`uv`](https://docs.astral.sh/uv/), then run:
 
 ```sh
-cd "$(brew --repository rshu/tap)"
+cd "$(brew --repository rshu/trajviz)"
 uv run --with packaging==26.2 python .github/scripts/update_formula.py --version X.Y.Z
 brew style Formula/trajviz.rb
 brew install --build-from-source trajviz
@@ -76,7 +54,3 @@ to test local formula changes. Packaging-only changes use `--revision N` when
 generating the same upstream version. Homebrew displays that revision as a suffix
 such as `0.3.1_1`; the Python package remains `0.3.1`. New upstream versions reset
 the packaging revision.
-
-See the [TrajViz repository](https://github.com/rshu/TrajViz) for documentation,
-supported native sessions and issue reports. This is an upstream-maintained tap;
-the formula is not part of `homebrew/core`.
