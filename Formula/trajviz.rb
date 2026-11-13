@@ -11,12 +11,13 @@ class Trajviz < Formula
 
   bottle do
     root_url "https://github.com/rshu/homebrew-trajviz/releases/download/trajviz-0.5.1"
-    sha256 cellar: :any, arm64_tahoe:   "5d5ffc659acf0357999fc0e8ff5a485097063c16da179b81cbed5da7bfc449f9"
-    sha256 cellar: :any, arm64_sequoia: "1911274f2dba3f803162dcf6496d3622d1c905bda0b224e6dd5ade9d6918955c"
-    sha256 cellar: :any, tahoe:         "6b569fcdd8a69a91051b30c215971551a2e71ee5a2ce98b54360e5fe9a4bd02c"
-    sha256 cellar: :any, sequoia:       "3886e379c5c7874e1941b4310eda4debb92e5d417ae1630bdd54d018ae667e9f"
-    sha256 cellar: :any, arm64_linux:   "2e7c20ce70708e1b7ce23e8c7bc404677895db63df56cf903c7ad92d25b98b13"
-    sha256 cellar: :any, x86_64_linux:  "9cece5fad5e1266bcdea7a50c765f3ccba66d38ba58a7d6e7b05f7369cad8401"
+    rebuild 1
+    sha256 cellar: :any, arm64_tahoe:   "79b55fedc137795f9cce9b1e75e432568e30f64794abd1616ccb66b060ca5b5d"
+    sha256 cellar: :any, arm64_sequoia: "9957b6a56faf7a82fa91f2d2ffdb132fb994b2e7a266042299ccaba187b5f5f6"
+    sha256 cellar: :any, tahoe:         "154f3bb72c2eb7c54fce462bd319ff1d2b5c6a5ec55ad4b28c981e5d164bae2b"
+    sha256 cellar: :any, sequoia:       "a71aa0fb17d15185f8db4f44cf6584efcc00d4f8c197eb25c8862ce420a2db65"
+    sha256 cellar: :any, arm64_linux:   "46206dc8c4cb682927ad928416dd79c4fee5f4996c58d1bb5b8f2f7e4c5b5e14"
+    sha256 cellar: :any, x86_64_linux:  "73259ceeb7c418d144007fd1ce22aa0d8ec29ad8d6c9928f88663b9302a8d280"
   end
 
   depends_on "libyaml"

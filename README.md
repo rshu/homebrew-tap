@@ -16,8 +16,10 @@ for loading sessions, comparing runs, and configuring AI analysis.
 
 ## Upgrade
 
+Run `brew update`. If Homebrew moves your existing tap to `rshu/trajviz`,
+repeat the formula trust command above. Then upgrade with:
+
 ```sh
-brew update
 brew upgrade trajviz
 ```
 
