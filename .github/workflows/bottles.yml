@@ -92,7 +92,8 @@ jobs:
           brew test "$FORMULA"
       - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6
         with:
-          subject-path: ${{ runner.temp }}/trajviz-bottles/release/*.tar.gz
+          # Homebrew matches attestations against the local (double-hyphen) name.
+          subject-path: ${{ runner.temp }}/trajviz-bottles/trajviz--*.tar.gz
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: trajviz-bottle-${{ matrix.os }}
