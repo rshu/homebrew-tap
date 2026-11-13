@@ -48,7 +48,7 @@ jobs:
       - name: Style
         run: brew style Formula/trajviz.rb
       - name: Install
-        run: brew install --build-from-source rshu/tap/trajviz
+        run: brew install --build-from-source trajviz
       - name: Functional tests
         run: brew test rshu/tap/trajviz
       - name: Audit

@@ -1,9 +1,12 @@
 # TrajViz for Homebrew
 
-Install the full TrajViz dashboard and command-line tools:
+Install the full TrajViz dashboard and command-line tools. The first two
+commands are one-time setup. The trust step applies to Homebrew 6 and later.
 
 ```sh
-brew install rshu/tap/trajviz
+brew tap rshu/tap
+brew trust --formula rshu/tap/trajviz
+brew install trajviz
 agent-trajviz
 ```
 
@@ -33,7 +36,7 @@ connections have their own session settings; see the
 
 ```sh
 brew update
-brew upgrade rshu/tap/trajviz
+brew upgrade trajviz
 ```
 
 The package tracks stable [`agent-trajviz` releases on PyPI](https://pypi.org/project/agent-trajviz/).
@@ -60,16 +63,15 @@ and merge the update into `main`.
 To prepare an update locally, install [`uv`](https://docs.astral.sh/uv/), then run:
 
 ```sh
-brew tap rshu/tap
 cd "$(brew --repository rshu/tap)"
 uv run --with packaging==26.2 python .github/scripts/update_formula.py --version X.Y.Z
 brew style Formula/trajviz.rb
-brew install --build-from-source rshu/tap/trajviz
-brew test rshu/tap/trajviz
-brew audit --strict --online rshu/tap/trajviz
+brew install --build-from-source trajviz
+brew test trajviz
+brew audit --strict --online trajviz
 ```
 
-For an already-installed version, use `brew reinstall --build-from-source rshu/tap/trajviz`
+For an already-installed version, use `brew reinstall --build-from-source trajviz`
 to test local formula changes. Packaging-only changes use `--revision N` when
 generating the same upstream version. Homebrew displays that revision as a suffix
 such as `0.3.1_1`; the Python package remains `0.3.1`. New upstream versions reset
