@@ -252,7 +252,19 @@ class FormulaSmokeTests(OfflineTestCase):
                     patch.object(sys, "argv", [str(SCRIPT), "--version", "9.8.7"]), \
                     contextlib.redirect_stdout(io.StringIO()):
                 formula.main()
-            generated = (root / "Formula" / "trajviz.rb").read_text(encoding="utf-8")
+                path = root / "Formula" / "trajviz.rb"
+                generated = path.read_text(encoding="utf-8")
+                bottled = generated.replace(
+                    '  depends_on "libyaml"',
+                    '  bottle do\n    sha256 arm64_tahoe: "' + "b" * 64 + '"\n  end\n\n  depends_on "libyaml"',
+                    1,
+                )
+                path.write_text(bottled, encoding="utf-8")
+                formula.main()
+                self.assertEqual(path.read_text(encoding="utf-8"), bottled)
+                file["digests"]["sha256"] = "c" * 64
+                formula.main()
+                self.assertEqual(path.read_text(encoding="utf-8"), generated.replace("a" * 64, "c" * 64))
         commands = re.search(r"%w\[(.*?)\]\.each", generated, re.DOTALL)
         self.assertIsNotNone(commands)
         self.assertEqual(set(commands[1].split()), {

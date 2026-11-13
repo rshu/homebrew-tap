@@ -237,6 +237,11 @@ class Trajviz < Formula
     template = (ROOT / ".github" / "scripts" / "formula_methods.rb").read_text(encoding="utf-8")
     chunks.append(template)
     content = "".join(chunks)
+    # A bottle belongs to the exact formula that built it. Keep it when
+    # regenerating that formula and drop it when the wheel or resources change.
+    without_bottle = re.sub(r"^  bottle do\n.*?^  end\n\n", "", existing, count=1, flags=re.M | re.S)
+    if without_bottle == content:
+        content = existing
     # Atomic replacement keeps a failed update from truncating a working formula.
     with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=formula.parent, delete=False) as output:
         output.write(content)

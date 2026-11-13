@@ -39,20 +39,23 @@ brew upgrade rshu/tap/trajviz
 The package tracks stable [`agent-trajviz` releases on PyPI](https://pypi.org/project/agent-trajviz/).
 For Python projects that import the library, continue using `pip install agent-trajviz`.
 
-This upstream tap uses the release's tested dependency versions and pinned,
-SHA-256-verified PyPI wheels in an isolated Homebrew
-Python 3.14 environment. Installation does not resolve dependencies or modify
-your existing Python environments. The formula includes dashboards, charts,
-reports, model features and native compressed-session support. macOS and Linux
-on Apple Silicon/ARM64 and Intel/x86-64 are checked in CI.
+Homebrew installs a prebuilt bottle when one matches your platform. Otherwise,
+the formula installs the release's pinned, SHA-256-verified PyPI wheels into
+its isolated Python 3.14 environment. The formula includes dashboards, charts,
+reports, model features and native compressed-session support.
 
 ## Maintaining the package
 
 After publishing a stable PyPI release, run the **Update formula** workflow with
 the same version. It regenerates the dependency resources, prepares an update
 branch and starts the formula tests. An existing branch must match the generated
-formula exactly; a stale branch is rejected. Review the branch and passing CI results,
-then merge it into `main`. The workflow summary links to the prepared branch.
+formula exactly. The workflow summary links to the prepared branch.
+
+Run **Build bottles** on the prepared formula commit. The workflow tests the
+installed archives and provides their checksums and Homebrew bottle metadata.
+Upload the archives to a tap release using the versioned URL in that metadata,
+then add the generated bottle block to the formula. Review the passing CI results
+and merge the update into `main`.
 
 To prepare an update locally, install [`uv`](https://docs.astral.sh/uv/), then run:
 

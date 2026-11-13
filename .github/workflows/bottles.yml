@@ -48,20 +48,48 @@ jobs:
             (if .revision > 0 then "_" + (.revision | tostring) else "" end)')"
           mkdir -p "$RUNNER_TEMP/trajviz-bottles/release"
           cd "$RUNNER_TEMP/trajviz-bottles"
-          brew bottle --json \
+          rebuild=()
+          if brew info --json=v2 "$FORMULA" | jq -e '(.formulae[0].bottle.stable.files // {}) | length == 0'; then
+            rebuild=(--no-rebuild)
+          fi
+          brew bottle --json "${rebuild[@]}" \
             --root-url="https://github.com/$GITHUB_REPOSITORY/releases/download/trajviz-$pkg_version" "$FORMULA"
       - name: Install and test the bottled keg
         run: |
           cd "$RUNNER_TEMP/trajviz-bottles"
           metadata=(trajviz--*.bottle.json)
           test "${#metadata[@]}" -eq 1
-          artifact="$(jq -er --arg formula "$FORMULA" '.[$formula].bottle.tags | .[].local_filename' "${metadata[0]}")"
-          release_name="$(jq -er --arg formula "$FORMULA" '.[$formula].bottle.tags | .[].filename' "${metadata[0]}")"
+          python3 - "${metadata[0]}" "$(brew --repository rshu/tap)/Formula/trajviz.rb" <<'PYTHON'
+          import json
+          import os
+          import re
+          import shutil
+          import sys
+          from pathlib import Path
+
+          bottle = json.loads(Path(sys.argv[1]).read_text())[os.environ["FORMULA"]]["bottle"]
+          ((tag, entry),) = bottle["tags"].items()
+          release = Path("release").resolve()
+          shutil.copyfile(entry["local_filename"], release / entry["filename"])
+
+          cellar = bottle["cellar"]
+          cellar_arg = f":{cellar}" if cellar in {"any", "any_skip_relocation"} else json.dumps(cellar)
+          block = ["  bottle do", f'    root_url "{release.as_uri()}"']
+          if bottle["rebuild"]:
+              block.append(f'    rebuild {bottle["rebuild"]}')
+          block.extend([f'    sha256 cellar: {cellar_arg}, {tag}: "{entry["sha256"]}"', "  end", ""])
+
+          formula = Path(sys.argv[2])
+          source = re.sub(r"^  bottle do\n.*?^  end\n\n", "", formula.read_text(), flags=re.M | re.S)
+          before = '  depends_on "libyaml"\n'
+          if source.count(before) != 1:
+              raise ValueError("Could not locate where to insert the bottle block")
+          formula.write_text(source.replace(before, "\n".join(block) + "\n" + before, 1))
+          PYTHON
           brew uninstall "$FORMULA"
-          brew install "$PWD/$artifact"
+          brew install "$FORMULA"
           brew info --json=v2 "$FORMULA" | jq -e '.formulae[0].installed | any(.poured_from_bottle == true)'
           brew test "$FORMULA"
-          cp "$artifact" "release/$release_name"
       - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6
         with:
           subject-path: ${{ runner.temp }}/trajviz-bottles/release/*.tar.gz
